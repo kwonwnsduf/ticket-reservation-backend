@@ -8,12 +8,12 @@ import lombok.Getter;
 public class ApiResponse<T> {
     private final boolean success;
     private final T data;
-    private final String message;
+
     public static <T> ApiResponse<T> ok(T data){
-        return new ApiResponse<>(true,data,null);
+        return new ApiResponse<>(true,data);
     }
-    public static <T> ApiResponse<T> fail(String message){
-        return new ApiResponse<>(false,null,message);
+    public static <T> ApiResponse<T> fail(T data){
+        return new ApiResponse<>(false,data);
 
     }
 

@@ -20,12 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
     private final MemberService memberService;
     @PostMapping("/signup")
-    public ApiResponse<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest req){
+    public ApiResponse<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest req){
         Long id=memberService.signUp(req.email,req.password,req.name);
         return ApiResponse.ok(new SignUpResponse(id));
     }
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+    public ApiResponse<LoginResponse> login(@RequestBody @Valid  LoginRequest req) {
         String result = memberService.login(req.email, req.password);
         return ApiResponse.ok(new LoginResponse(result));
     }
