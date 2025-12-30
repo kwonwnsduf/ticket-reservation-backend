@@ -142,9 +142,11 @@ Postman으로 회원가입 요청을 보냈을 때 404가 발생했는데,
 
 ---
 
-# Next (Day2 예정)
-- Seat(좌석) 도메인 설계
-- 좌석 목록 조회 API
-- 예약(Reservation) 도메인 설계
-- “중복 예약 방지”를 위한 제약/트랜잭션/락 전략 고민 시작
-- (추후) 로그인 응답을 JWT 기반으로 확장
+## Day 2
+### 전역 예외 처리 및 Validation
+- @Valid를 이용한 요청 값 검증
+- DTO에 @Email, @NotBlank 적용
+- GlobalExceptionHandler(@RestControllerAdvice) 구현
+- MethodArgumentNotValidException 전역 처리
+- ErrorResponse를 통한 에러 응답 구조 분리
+- ResponseEntity를 사용한 HTTP Status 제어
