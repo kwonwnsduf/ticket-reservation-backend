@@ -150,3 +150,36 @@ Postman으로 회원가입 요청을 보냈을 때 404가 발생했는데,
 - MethodArgumentNotValidException 전역 처리
 - ErrorResponse를 통한 에러 응답 구조 분리
 - ResponseEntity를 사용한 HTTP Status 제어
+
+
+---
+
+## Day3 - JPA 연동 & 예매 도메인 구현
+
+### ✅ 목표
+- Spring Data JPA 연동
+- Event / Seat / Reservation 도메인(Entity) 설계
+- Repository / Service / Controller 구현
+- 예매 생성 로직(중복 예매 방지) 추가
+- 전역 예외 처리(ErrorCode, ApiException)와 연동
+
+### ✅ 구현 내용
+- **Entity**
+    - Event (공연)
+    - Seat (좌석) - (event_id, seat_no) 유니크 제약
+    - Reservation (예약) - (event_id, seat_id) 유니크 제약
+- **Repository**
+    - EventRepository, SeatRepository, ReservationRepository
+    - ReservationRepository: `findByEventIdAndSeatId()`로 중복 예매 체크
+- **Service**
+    - EventService / SeatService / ReservationService
+    - ReservationService에서 이미 예약된 좌석이면 `ALREADY_RESERVED` 예외 발생
+- **Controller**
+    - /api/events (공연 CRUD)
+    - /api/events/{eventId}/seats (좌석 생성/조회)
+    - /api/events/{eventId}/reservations (예매 생성)
+
+### ✅ 테스트
+- Postman으로 공연 생성 → 좌석 생성 → 예매 생성 흐름 확인
+- 동일 좌석 재예매 시 409(CONFLICT) 에러 확인
+~~~~
