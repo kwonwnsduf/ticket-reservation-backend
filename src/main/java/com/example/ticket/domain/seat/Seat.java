@@ -20,10 +20,19 @@ public class Seat {
 
     @Column(name = "seat_no", nullable = false)
     private String seatNo; // ex) A1, A2...
+    @Column(nullable = false)
+    private boolean reserved;
 
     @Builder
     private Seat(Event event, String seatNo) {
         this.event = event;
         this.seatNo = seatNo;
+        this.reserved=false;
+    }
+    public void reserve(){
+        this.reserved=true;
+    }
+    public void cancelReserve(){
+        this.reserved=false;
     }
 }

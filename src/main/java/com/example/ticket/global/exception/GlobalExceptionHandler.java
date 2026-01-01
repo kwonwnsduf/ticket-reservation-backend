@@ -12,19 +12,32 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiResponse<ErrorResponse>> handleApi(ApiException e){
         ErrorCode code=e.getErrorCode();
-        return ResponseEntity.status(code.getStatus()).body(ApiResponse.fail( new ErrorResponse(code.getMessage())));
+        ErrorResponse error=new ErrorResponse(code.name(),code.getMessage());
+        return ResponseEntity.status(code.getStatus()).body(ApiResponse.fail(error));
 
     }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity< ApiResponse<ErrorResponse>> handleValid(MethodArgumentNotValidException e){
         String message=  e.getBindingResult().getFieldError() != null
                 ? e.getBindingResult().getFieldError().getDefaultMessage()
-                : "요청 값이 올바르지 않습니다.";
+                :  ErrorCode.INVALID_REQUEST.getMessage();
+        ;
+        ErrorResponse error = new ErrorResponse(ErrorCode.INVALID_REQUEST.name(), message);
 
-        return ResponseEntity.badRequest().body(ApiResponse.fail(new ErrorResponse(message)));}
+        return ResponseEntity.badRequest().body(ApiResponse.fail(error));}
     @ExceptionHandler(IllegalArgumentException.class)
     public  ResponseEntity<ApiResponse<ErrorResponse>> handleIllegalArgumentException(IllegalArgumentException e){
+        ErrorResponse error = new ErrorResponse(
+                ErrorCode.INVALID_REQUEST.name(),
+                e.getMessage()
+        );
        return ResponseEntity.badRequest()
-                .body(ApiResponse.fail(new ErrorResponse(e.getMessage())));
+                .body(ApiResponse.fail(error));
         }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleEtc(Exception e) {
+        // 운영에서는 로깅 추가 추천
+        ErrorResponse error = new ErrorResponse("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");
+        return ResponseEntity.status(500).body(ApiResponse.fail(error));
+    }
 }

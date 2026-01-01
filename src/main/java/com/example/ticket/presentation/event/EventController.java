@@ -1,6 +1,10 @@
 package com.example.ticket.presentation.event;
 
 import com.example.ticket.application.event.EventService;
+import com.example.ticket.presentation.event.dto.CreateEventRequest;
+import com.example.ticket.presentation.event.dto.CreateEventResponse;
+import com.example.ticket.presentation.event.dto.EventResponse;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -19,8 +23,8 @@ import java.time.LocalDateTime;
 public class EventController {
     private final EventService eventService;
     @PostMapping
-    public ResponseEntity<CreateEventResponse> create(@RequestBody CreateEventRequest req){
-        Long id= eventService.create(req.title,req.startsAt,req.endsAt);
+    public ResponseEntity<CreateEventResponse> create(@RequestBody @Valid CreateEventRequest req){
+        Long id= eventService.create(req.getTitle(),req.getStartsAt(),req.getStartsAt());
         return ResponseEntity.created(URI.create("/api/events/"+id)).body(new CreateEventResponse(id));
     }
     @GetMapping("/{eventId}")
@@ -30,8 +34,8 @@ public class EventController {
         return ResponseEntity.ok(new EventResponse(event.getId(), event.getTitle(), event.getStartsAt(),event.getEndsAt()));
     }
     @PutMapping("/{eventId}")
-    public ResponseEntity<Void> update(@PathVariable Long eventId, @RequestBody CreateEventRequest req) {
-        eventService.update(eventId, req.title, req.startsAt, req.endsAt);
+    public ResponseEntity<Void> update(@PathVariable Long eventId, @RequestBody @Valid CreateEventRequest req) {
+        eventService.update(eventId, req.getTitle(), req.getStartsAt(), req.getStartsAt());
         return ResponseEntity.noContent().build(); // 204
     }
     @DeleteMapping("/{eventId}")
@@ -39,25 +43,5 @@ public class EventController {
         eventService.delete(eventId);
         return ResponseEntity.noContent().build();
     }
-    @Getter@NoArgsConstructor
-    static class CreateEventRequest {
-        @NotBlank
-        public String title;
-        @NotNull
-        public LocalDateTime startsAt;
-        @NotNull public LocalDateTime endsAt;
-    }
 
-    @Getter @AllArgsConstructor
-    static class CreateEventResponse {
-        private Long id;
-    }
-
-    @Getter @AllArgsConstructor
-    static class EventResponse {
-        private Long id;
-        private String title;
-        private LocalDateTime startsAt;
-        private LocalDateTime endsAt;
-    }
 }

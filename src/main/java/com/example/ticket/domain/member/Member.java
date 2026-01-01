@@ -9,22 +9,24 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name="members", uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
+@Table(name="members")
 
 public class Member {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
+    @Column(nullable = false,unique=true)
     private String email;
     @Column(nullable = false)
     private String password;
-    @Column(nullable = false)
-    private String name;
+    
     @Builder
-    private Member(String email, String password, String name){
+    private Member(String email, String password){
         this.email=email;
         this.password=password;
-        this.name=name;
+        
+    }
+    public boolean matchPassword(String raw){
+        return this.password.equals(raw);
     }
 }

@@ -12,7 +12,5 @@ public class SignUpRequest {
     @NotBlank(message="이메일은 필수입니다.")
     public String email;
     @NotBlank(message="비밀번호는 필수입니다.")
-    public String password;
-    @NotBlank(message="이름은 필수입니다.")
-    public String name;
-}
+    public String password;}
+

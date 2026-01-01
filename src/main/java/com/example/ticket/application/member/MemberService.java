@@ -13,19 +13,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class MemberService {
     private final MemberRepository memberRepository;
-    public Long signUp(String email, String password, String name){
+
+    public Long signUp(String email, String password){
         if(memberRepository.existsByEmail(email)){
             throw new ApiException(ErrorCode.DUPLICATE_EMAIL);
         }
-        Member member=Member.builder().email(email).password(password).name(name).build();
+        Member member=Member.builder().email(email).password(password).build();
         return memberRepository.save(member).getId();
     }
     @Transactional(readOnly=true)
-    public String login(String email, String password){
+    public Long login(String email, String password){
         Member member=memberRepository.findByEmail(email).orElseThrow(()->new ApiException(ErrorCode.MEMBER_NOT_FOUND));
 
-    if(!member.getPassword().equals(password)){
+    if(!member.matchPassword(password)){
         throw new ApiException(ErrorCode.INVALID_PASSWORD);
     }
-    return "LOGIN_OK";
+    return member.getId();
 }}

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @Transactional
 public class EventService {
     private final EventRepository eventRepository;
+    
     public Long create(String title, LocalDateTime startsAt,LocalDateTime endsAt){
         Event event= Event.builder().title(title).startsAt(startsAt).endsAt(endsAt).build();
         return eventRepository.save(event).getId();
@@ -28,7 +29,8 @@ public class EventService {
         event.update(title, startsAt,endsAt);
     }
     public void delete(Long eventId){
-        eventRepository.delete(get(eventId));
+        Event event=get(eventId);
+        eventRepository.delete(event);
     }
 
 }
