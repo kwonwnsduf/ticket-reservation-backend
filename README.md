@@ -190,3 +190,37 @@ Postman으로 회원가입 요청을 보냈을 때 404가 발생했는데,
 - 좌석 예매 생성 API 구현
 - PESSIMISTIC_WRITE 락을 이용한 동시성 제어
 - 이미 예매된 좌석에 대한 예외 처리
+
+
+---
+# Day5 – Reservation HOLD / CONFIRM / CANCEL
+
+Day5에서는 기존 즉시 예약 방식(Day4)을 확장하여  
+**결제 전 좌석 임시 점유(HOLD)** 개념을 도입한 예매 흐름을 구현했습니다.
+
+---
+
+## 핵심 개념
+
+### Reservation Status
+- `HOLD` : 결제 전 임시 예매 상태
+- `CONFIRMED` : 결제 완료 후 확정 상태
+- `CANCELED` : 임시 예매 취소 상태
+
+### Seat Status
+- `AVAILABLE` → `HELD` → `SOLD`
+- HOLD 상태에서만 CONFIRM 가능
+
+---
+
+## Day5 주요 기능
+
+### 1️⃣ 임시 예매 생성 (HOLD)
+좌석을 임시로 점유하고 Reservation을 생성합니다.
+
+- **POST** `/api/reservations`
+- **Body**
+```json
+{
+  "seatId": 10
+}
