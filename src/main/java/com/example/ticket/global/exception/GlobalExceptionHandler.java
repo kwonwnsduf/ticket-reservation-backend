@@ -2,6 +2,7 @@ package com.example.ticket.global.exception;
 
 import com.example.ticket.global.dto.ApiResponse;
 import com.example.ticket.global.dto.ErrorResponse;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,4 +41,20 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");
         return ResponseEntity.status(500).body(ApiResponse.fail(error));
     }
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleState(IllegalStateException e) {
+        ErrorResponse error = new ErrorResponse(ErrorCode.INVALID_REQUEST.name(), e.getMessage());
+        return ResponseEntity.badRequest().body(ApiResponse.fail(error));
+    }
+
+    // ✅ Day5 추가: 동시성 충돌(Optimistic Lock)
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleOptimistic(OptimisticLockingFailureException e) {
+        ErrorResponse error = new ErrorResponse(ErrorCode.CONCURRENT_REQUEST.name(),
+                ErrorCode.CONCURRENT_REQUEST.getMessage());
+        return ResponseEntity.status(ErrorCode.CONCURRENT_REQUEST.getStatus()).body(ApiResponse.fail(error));
+    }
+
+
+
 }

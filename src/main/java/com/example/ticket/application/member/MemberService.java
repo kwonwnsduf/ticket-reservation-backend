@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class MemberService {
     private final MemberRepository memberRepository;
-
     public Long signUp(String email, String password){
         if(memberRepository.existsByEmail(email)){
             throw new ApiException(ErrorCode.DUPLICATE_EMAIL);

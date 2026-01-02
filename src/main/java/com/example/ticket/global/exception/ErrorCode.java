@@ -8,7 +8,8 @@ public enum ErrorCode {
         ALREADY_RESERVED(HttpStatus.CONFLICT, "이미 예매된 좌석입니다."), DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원이 존재하지 않습니다."),SOLD_OUT(HttpStatus.CONFLICT, "매진되었습니다."),
-    INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다."),EVENT_ENDED(HttpStatus.CONFLICT, "종료된 이벤트입니다.");;;
+    INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다."),EVENT_ENDED(HttpStatus.CONFLICT, "종료된 이벤트입니다.")
+    ,CONCURRENT_REQUEST(HttpStatus.CONFLICT, "동시 요청으로 처리에 실패했습니다. 다시 시도해주세요.");
     private final HttpStatus status;
     private final String message;
     ErrorCode(HttpStatus status, String message){

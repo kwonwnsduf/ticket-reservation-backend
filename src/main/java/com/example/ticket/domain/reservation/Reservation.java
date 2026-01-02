@@ -19,12 +19,16 @@ public class Reservation {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id",nullable = false)
+    @JoinColumn(name = "member_id",nullable = true)
     private Member member;
 
-    @OneToOne(fetch = FetchType.LAZY)
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id",nullable=false, unique = true)
     private Seat seat;
+    @Enumerated(EnumType.STRING)
+    private ReservationStatus status= ReservationStatus.HOLD;
 
     // Day1/2에서 member 있으면 FK로 바꿔도 됨
 
@@ -37,6 +41,20 @@ public class Reservation {
         this.member=member;
         this.seat=seat;
         this.reservedAt=LocalDateTime.now();
+    }
+    public Reservation(Seat seat){
+        this.seat= seat;
+        this.reservedAt = LocalDateTime.now();
+        this.status = ReservationStatus.HOLD;
+    }
+    public void confirm(){
+        if(status != ReservationStatus.HOLD){
+            throw new IllegalStateException("HOLD 상태만 확정 가능");
+        }
+        status=ReservationStatus.CONFIRMED;
+    }
+    public void cancel(){
+        status=ReservationStatus.CANCELED;
     }
 }
 

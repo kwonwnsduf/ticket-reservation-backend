@@ -22,11 +22,11 @@ public class SeatController {
     private final SeatService seatService;
 
     @PostMapping
-    public ResponseEntity<Void> create(@PathVariable Long eventId, @RequestBody @Valid CreateSeatRequest req) {
+    public ResponseEntity<CreateSeatResponse> create(@PathVariable Long eventId, @RequestBody @Valid CreateSeatRequest req) {
         Long seatId = seatService.create(eventId, req.getSeatNo());
 
         return ResponseEntity
-                .created(URI.create("/api/events/" + eventId + "/seats/" + seatId)).build();
+                .created(URI.create("/api/events/" + eventId + "/seats/" + seatId)).body(new CreateSeatResponse(seatId));
 
     }
 
