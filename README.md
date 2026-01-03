@@ -224,3 +224,15 @@ Day5에서는 기존 즉시 예약 방식(Day4)을 확장하여
 {
   "seatId": 10
 }
+
+
+---
+## Day 6 - 예매 확정 및 취소 처리
+
+- 예매 상태(PENDING / CONFIRMED / CANCELLED) 도입
+- 결제 실패 시 트랜잭션 롤백 처리
+- JPA Dirty Checking을 이용한 상태 변경
+- 예매 확정/취소 API 구현
+
+
+

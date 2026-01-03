@@ -21,6 +21,8 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id",nullable = true)
     private Member member;
+    private Long seatId;
+    private Long memberId;
 
 
 
@@ -28,34 +30,36 @@ public class Reservation {
     @JoinColumn(name = "seat_id",nullable=false, unique = true)
     private Seat seat;
     @Enumerated(EnumType.STRING)
-    private ReservationStatus status= ReservationStatus.HOLD;
+    @Column(nullable = false)
+    private ReservationStatus status;
 
     // Day1/2에서 member 있으면 FK로 바꿔도 됨
 
     @Column(nullable = false)
     private LocalDateTime reservedAt;
 
-
     @Builder
-    public Reservation(Member member, Seat seat) {
-        this.member=member;
-        this.seat=seat;
-        this.reservedAt=LocalDateTime.now();
-    }
-    public Reservation(Seat seat){
-        this.seat= seat;
+    private Reservation(Member member, Seat seat) {
+        this.member = member;
+        this.seat = seat;
+        this.status = ReservationStatus.PENDING;
         this.reservedAt = LocalDateTime.now();
-        this.status = ReservationStatus.HOLD;
     }
-    public void confirm(){
-        if(status != ReservationStatus.HOLD){
-            throw new IllegalStateException("HOLD 상태만 확정 가능");
+    public void confirm() {
+        if (this.status != ReservationStatus.PENDING) {
+            throw new IllegalStateException("PENDING 상태만 확정 가능");
         }
-        status=ReservationStatus.CONFIRMED;
+        this.status = ReservationStatus.CONFIRMED;
     }
-    public void cancel(){
-        status=ReservationStatus.CANCELED;
+
+    public void cancel() {
+        if (this.status == ReservationStatus.CONFIRMED) {
+            throw new IllegalStateException("확정된 예매는 취소 정책에 따라 처리해야 합니다.");
+        }
+        this.status = ReservationStatus.CANCELED;
     }
+
+
 }
 
 
