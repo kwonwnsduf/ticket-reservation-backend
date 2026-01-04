@@ -3,6 +3,8 @@ package com.example.ticket.domain.reservation;
 import com.example.ticket.domain.event.Event;
 import com.example.ticket.domain.member.Member;
 import com.example.ticket.domain.seat.Seat;
+import com.example.ticket.global.exception.ApiException;
+import com.example.ticket.global.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,15 +21,14 @@ public class Reservation {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id",nullable = true)
+    @JoinColumn(name = "member_id",nullable = false)
     private Member member;
-    private Long seatId;
-    private Long memberId;
+
 
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seat_id",nullable=false, unique = true)
+    @JoinColumn(name = "seat_id",nullable=false)
     private Seat seat;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,22 +40,22 @@ public class Reservation {
     private LocalDateTime reservedAt;
 
     @Builder
-    private Reservation(Member member, Seat seat) {
+    private Reservation (Member member, Seat seat) {
         this.member = member;
         this.seat = seat;
-        this.status = ReservationStatus.PENDING;
+    this.status = ReservationStatus.RESERVED;
         this.reservedAt = LocalDateTime.now();
     }
-    public void confirm() {
-        if (this.status != ReservationStatus.PENDING) {
-            throw new IllegalStateException("PENDING 상태만 확정 가능");
-        }
-        this.status = ReservationStatus.CONFIRMED;
+    public static Reservation create(Member member, Seat seat) {
+        return new Reservation(member, seat);
+    }
+    public boolean isCanceled() {
+        return this.status == ReservationStatus.CANCELED;
     }
 
     public void cancel() {
-        if (this.status == ReservationStatus.CONFIRMED) {
-            throw new IllegalStateException("확정된 예매는 취소 정책에 따라 처리해야 합니다.");
+        if (this.status == ReservationStatus.CANCELED) {
+            throw new ApiException(ErrorCode.ALREADY_CANCELED);
         }
         this.status = ReservationStatus.CANCELED;
     }

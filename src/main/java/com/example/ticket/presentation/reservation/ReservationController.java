@@ -1,6 +1,5 @@
 package com.example.ticket.presentation.reservation;
 import com.example.ticket.application.reservation.ReservationService;
-import com.example.ticket.presentation.reservation.dto.ReservationConfirmRequest;
 import com.example.ticket.presentation.reservation.dto.ReservationCreateRequest;
 import com.example.ticket.presentation.reservation.dto.ReservationResponse;
 import jakarta.validation.Valid;
@@ -35,17 +34,7 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.get(reservationId));
     }
 
-    // Day6: 결제 성공 확정
-    @PostMapping("/reservations/{reservationId}/confirm")
-    public ResponseEntity<Void> confirm(
-            @PathVariable Long reservationId,
-            @RequestBody @Valid ReservationConfirmRequest req
-    ) {
-        reservationService.confirm(reservationId, req.getPrice());
-        return ResponseEntity.noContent().build();
-    }
 
-    // Day6: 취소
     @PostMapping("/reservations/{reservationId}/cancel")
     public ResponseEntity<Void> cancel(@PathVariable Long reservationId) {
         reservationService.cancel(reservationId);

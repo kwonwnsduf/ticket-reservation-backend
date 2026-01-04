@@ -1,6 +1,8 @@
 package com.example.ticket.domain.seat;
 
 import com.example.ticket.domain.event.Event;
+import com.example.ticket.global.exception.ApiException;
+import com.example.ticket.global.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,34 +27,28 @@ public class Seat {
     @Version
     private Long version;
 
-    @Column(nullable = false)
-    private boolean reserved;
+
 
     @Builder
     private Seat(Event event, String seatNo) {
         this.event = event;
         this.seatNo = seatNo;
-        this.reserved=false;
+        this.status=SeatStatus.AVAILABLE;
     }
-    public void reserve(){
-        this.reserved=true;
+    public boolean isOccupied() {
+        return this.status == SeatStatus.OCCUPIED;
     }
-    public void cancelReserve(){
-        this.reserved=false;
-    }
-    public void hold(){
-        if(status!=SeatStatus.AVAILABLE){
-            throw new IllegalStateException("이미 예매된 좌석입니다.");
+
+    /** 예매(좌석 점유) */
+    public void reserve() {
+        if (this.status != SeatStatus.AVAILABLE) {
+            throw new ApiException(ErrorCode.ALREADY_RESERVED);
         }
-        status=SeatStatus.HELD;
+        this.status = SeatStatus.OCCUPIED;
     }
-    public void sold(){
-        if(status != SeatStatus.HELD){
-            throw new IllegalStateException("임시 예매 상태가 아닙니다.");
-        }
-        status=SeatStatus.SOLD;
-    }
-    public void release(){
-        status=SeatStatus.AVAILABLE;
+
+    /** 취소(좌석 해제) */
+    public void makeAvailable() {
+        this.status = SeatStatus.AVAILABLE;
     }
 }
