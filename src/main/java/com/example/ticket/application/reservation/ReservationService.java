@@ -33,12 +33,12 @@ public class ReservationService {
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
 
         // 좌석이 이미 HOLD/SOLD 등 점유 상태면 막기
-        if (seat.isOccupied()) { // 네 기존 메서드 재사용
+        if (!seat.isAvailable()) { // 네 기존 메서드 재사용
             throw new ApiException(ErrorCode.ALREADY_RESERVED);
         }
 
         // Day5 로직: 좌석 선점(HOLD)
-        seat.reserve();
+        seat.hold();
 
 
         Reservation saved = reservationRepository.save(
@@ -71,7 +71,7 @@ public class ReservationService {
     // Day6: 결제 성공 확정
 
 
-    @Transactional
+
     public void cancel(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
@@ -80,15 +80,16 @@ public class ReservationService {
             if (reservation.isCanceled()) {
                 throw new ApiException(ErrorCode.ALREADY_CANCELED);
             }
-            throw new ApiException(ErrorCode.INVALID_REQUEST); // 또는 INVALID_RESERVATION_STATUS 추가 추천
+            throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS); // 또는 INVALID_RESERVATION_STATUS 추가 추천
         }
+        Long eventId=reservation.getSeat().getEvent().getId();
+        Long seatId=reservation.getSeat().getId();
         Seat seat = seatRepository.findByIdWithLock(
-                reservation.getSeat().getEvent().getId(),
-                reservation.getSeat().getId()
+                eventId,seatId
         ).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
 
         reservation.cancel();
-        seat.makeAvailable(); // HOLD 해제
+        seat.release(); // HOLD 해제
     }
 }
 

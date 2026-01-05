@@ -36,7 +36,7 @@ public class ReservationController {
 
 
     @PostMapping("/reservations/{reservationId}/cancel")
-    public ResponseEntity<Void> cancel(@PathVariable Long reservationId) {
+    public ResponseEntity<Void> delete(@PathVariable Long reservationId) {
         reservationService.cancel(reservationId);
         return ResponseEntity.noContent().build();
     }

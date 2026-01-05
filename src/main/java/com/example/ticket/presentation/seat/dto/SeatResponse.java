@@ -8,6 +8,6 @@ import lombok.Getter;
 public class SeatResponse {
     private Long seatId;
     private String seatNo;
-    private boolean occupied;
+    private String status;
 }
 

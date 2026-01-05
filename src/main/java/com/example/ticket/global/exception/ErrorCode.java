@@ -18,7 +18,7 @@ public enum ErrorCode {
     EVENT_ENDED(HttpStatus.CONFLICT, "종료된 이벤트입니다."),
     SOLD_OUT(HttpStatus.CONFLICT, "매진되었습니다."),
     ALREADY_RESERVED(HttpStatus.CONFLICT, "이미 예매된 좌석입니다."),
-
+    INVALID_SEAT_STATUS(HttpStatus.BAD_REQUEST, "좌석 상태가 올바르지 않습니다."),
     // ===== Reservation (Day8 핵심) =====
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "예매가 존재하지 않습니다."),
     INVALID_RESERVATION_STATUS(HttpStatus.CONFLICT, "예매 상태가 올바르지 않습니다."),

@@ -263,4 +263,25 @@ Day 7 - 예매 취소 및 트랜잭션 처리
 - 스케줄러 + 트랜잭션 조합 이해
 
 
+---
+
+## Day9 – 예매 만료 처리 (Timeout)
+
+### 구현 내용
+- HOLD 상태 예매에 만료 시간(expiredAt) 추가
+- 일정 시간 내 결제되지 않으면 자동 취소
+- 좌석 자동 해제 처리
+- @Scheduled 기반 배치 처리
+
+### 핵심 설계
+- 상태 전이 로직을 Reservation 엔티티에 위임
+- Service는 흐름 제어만 담당
+- 서버 주도 정합성 유지
+
+### 기술 포인트
+- JPA Pessimistic Lock
+- Domain-driven 상태 관리
+- Scheduler 기반 자동 처리
+
+
 

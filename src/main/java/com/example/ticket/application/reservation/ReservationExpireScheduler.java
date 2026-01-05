@@ -17,10 +17,13 @@ public class ReservationExpireScheduler {
     @Transactional
     @Scheduled(fixedDelay=60000)
     public void expireReservations(){
+        LocalDateTime now=LocalDateTime.now();
         List<Reservation> expired=reservationRepository.findExpired(LocalDateTime.now());
         for(Reservation r: expired){
-            r.expire();
-            r.getSeat().makeAvailable();
+            boolean canceled=r.cancelIfExpired(now);
+            if(canceled){
+
+            r.getSeat().release();}
         }
     }
 }

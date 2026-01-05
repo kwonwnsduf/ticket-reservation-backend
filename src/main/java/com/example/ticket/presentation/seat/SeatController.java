@@ -34,7 +34,7 @@ public class SeatController {
     public ResponseEntity<List<SeatResponse>> list(@PathVariable Long eventId) {
         List<Seat> seats = seatService.list(eventId);
         List<SeatResponse> res = seats.stream()
-                .map(s -> new SeatResponse(s.getId(), s.getSeatNo(),s.isOccupied()))
+                .map(s -> new SeatResponse(s.getId(), s.getSeatNo(),s.getStatus().name()))
                 .toList();
         return ResponseEntity.ok(res);
     }

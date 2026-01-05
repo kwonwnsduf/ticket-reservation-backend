@@ -59,6 +59,9 @@ public class Reservation {
     public boolean isHold() {
         return this.status == ReservationStatus.HOLD;
     }
+    public boolean isExpired(LocalDateTime now) {
+        return this.status == ReservationStatus.HOLD && this.expiredAt.isBefore(now);
+    }
 
 
     public void cancel() {
@@ -80,11 +83,10 @@ public class Reservation {
         this.status = ReservationStatus.CONFIRMED;
         this.confirmedAt = LocalDateTime.now();
     }
-    public void expire() {
-        if (this.status != ReservationStatus.HOLD) {
-            return; // 이미 다른 상태면 조용히 무시(스케줄러에서 편함)
-        }
-        this.status = ReservationStatus.EXPIRED;
+    public boolean cancelIfExpired(LocalDateTime now) {
+        if (!isExpired(now)) return false;
+        this.status = ReservationStatus.CANCELED;
+        return true;
     }
 
 

@@ -38,17 +38,31 @@ public class Seat {
     public boolean isOccupied() {
         return this.status == SeatStatus.OCCUPIED;
     }
-
-    /** 예매(좌석 점유) */
-    public void reserve() {
+    public boolean isAvailable() {
+        return this.status == SeatStatus.AVAILABLE;
+    }
+    public boolean isHeld() {
+        return this.status == SeatStatus.HELD;
+    }
+    public void hold() {
         if (this.status != SeatStatus.AVAILABLE) {
             throw new ApiException(ErrorCode.ALREADY_RESERVED);
         }
+        this.status = SeatStatus.HELD;
+    }
+    /** 예매(좌석 점유) */
+    public void occupy() {
+        if (this.status != SeatStatus.HELD) {
+            // AVAILABLE에서 바로 확정하면 흐름이 깨짐 (정책)
+            throw new ApiException(ErrorCode.INVALID_SEAT_STATUS);
+        }
         this.status = SeatStatus.OCCUPIED;
     }
-
     /** 취소(좌석 해제) */
-    public void makeAvailable() {
+    public void release() {
+        if (this.status == SeatStatus.OCCUPIED) {
+            throw new ApiException(ErrorCode.INVALID_SEAT_STATUS);
+        }
         this.status = SeatStatus.AVAILABLE;
     }
 }
