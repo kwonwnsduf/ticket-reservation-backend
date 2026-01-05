@@ -1,6 +1,8 @@
 package com.example.ticket.domain.reservation;
 
 public enum ReservationStatus {
-    RESERVED,
-    CANCELED
+    HOLD,
+    CONFIRMED,
+    CANCELED,
+    EXPIRED
 }

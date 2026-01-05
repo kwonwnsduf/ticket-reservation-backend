@@ -22,7 +22,7 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final MemberRepository memberRepository;
     // 인터페이스 추천 (없으면 Fake로)
-
+    private static final int HOLD_MINUTES=5;
     // Day6: "예매 생성" = 좌석 HOLD + Reservation PENDING 생성
     public ReservationResponse create(Long eventId, Long seatId, Long memberId) {
 
@@ -40,9 +40,9 @@ public class ReservationService {
         // Day5 로직: 좌석 선점(HOLD)
         seat.reserve();
 
-        // Day6 로직: Reservation은 무조건 PENDING으로 생성
+
         Reservation saved = reservationRepository.save(
-                Reservation.create(member,seat)
+                Reservation.createHold(member,seat,HOLD_MINUTES)
         );
 
         return new ReservationResponse(
@@ -75,14 +75,18 @@ public class ReservationService {
     public void cancel(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
-
+        if (!reservation.isHold()) {
+            // 이미 canceled면 기존 에러 유지
+            if (reservation.isCanceled()) {
+                throw new ApiException(ErrorCode.ALREADY_CANCELED);
+            }
+            throw new ApiException(ErrorCode.INVALID_REQUEST); // 또는 INVALID_RESERVATION_STATUS 추가 추천
+        }
         Seat seat = seatRepository.findByIdWithLock(
                 reservation.getSeat().getEvent().getId(),
                 reservation.getSeat().getId()
         ).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
-        if (reservation.isCanceled()) {
-            throw new ApiException(ErrorCode.ALREADY_CANCELED);
-        }
+
         reservation.cancel();
         seat.makeAvailable(); // HOLD 해제
     }

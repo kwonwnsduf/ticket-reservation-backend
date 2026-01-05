@@ -38,26 +38,53 @@ public class Reservation {
 
     @Column(nullable = false)
     private LocalDateTime reservedAt;
+     @Column(nullable = false)
+     private LocalDateTime expiredAt;
+
+     private LocalDateTime confirmedAt;
 
     @Builder
-    private Reservation (Member member, Seat seat) {
+    private Reservation (Member member, Seat seat,LocalDateTime expiredAt) {
         this.member = member;
         this.seat = seat;
-    this.status = ReservationStatus.RESERVED;
+    this.status = ReservationStatus.HOLD;
         this.reservedAt = LocalDateTime.now();
+        this.expiredAt=expiredAt;
     }
-    public static Reservation create(Member member, Seat seat) {
-        return new Reservation(member, seat);
-    }
+    public static Reservation createHold(Member member, Seat seat,int holdMinutes) {
+        return Reservation.builder().member(member).seat(seat).expiredAt(LocalDateTime.now().plusMinutes(holdMinutes)).build();}
     public boolean isCanceled() {
         return this.status == ReservationStatus.CANCELED;
     }
+    public boolean isHold() {
+        return this.status == ReservationStatus.HOLD;
+    }
+
 
     public void cancel() {
         if (this.status == ReservationStatus.CANCELED) {
             throw new ApiException(ErrorCode.ALREADY_CANCELED);
         }
+        if (this.status != ReservationStatus.HOLD) {
+            throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
+        }
         this.status = ReservationStatus.CANCELED;
+    }
+    public void confirm() {
+        if (this.status != ReservationStatus.HOLD) {
+            throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
+        }
+        if (LocalDateTime.now().isAfter(this.expiredAt)) {
+            throw new ApiException(ErrorCode.RESERVATION_EXPIRED);
+        }
+        this.status = ReservationStatus.CONFIRMED;
+        this.confirmedAt = LocalDateTime.now();
+    }
+    public void expire() {
+        if (this.status != ReservationStatus.HOLD) {
+            return; // 이미 다른 상태면 조용히 무시(스케줄러에서 편함)
+        }
+        this.status = ReservationStatus.EXPIRED;
     }
 
 
