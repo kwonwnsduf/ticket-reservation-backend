@@ -13,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -40,9 +43,9 @@ public class ReservationService {
         // Day5 로직: 좌석 선점(HOLD)
         seat.hold();
 
-
+        LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(HOLD_MINUTES);
         Reservation saved = reservationRepository.save(
-                Reservation.createHold(member,seat,HOLD_MINUTES)
+                Reservation.createHold(member,seat,expiredAt)
         );
 
         return new ReservationResponse(
@@ -90,6 +93,22 @@ public class ReservationService {
 
         reservation.cancel();
         seat.release(); // HOLD 해제
+    }
+    public int expireHolds() {
+        LocalDateTime now = LocalDateTime.now();
+
+        // join fetch seat로 가져오는 걸 추천(Repository 수정 필요)
+        List<Reservation> expired = reservationRepository.findAllExpiredHolds(now);
+
+        int count = 0;
+        for (Reservation r : expired) {
+            // HOLD + expiredAt<now 인 애들만 오지만, 안전하게 한 번 더 체크해도 됨
+            if (r.cancelIfExpired(now)) {
+                r.getSeat().release(); // 좌석 복구
+                count++;
+            }
+        }
+        return count;
     }
 }
 

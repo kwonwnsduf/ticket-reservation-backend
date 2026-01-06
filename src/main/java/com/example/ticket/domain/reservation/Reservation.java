@@ -51,8 +51,8 @@ public class Reservation {
         this.reservedAt = LocalDateTime.now();
         this.expiredAt=expiredAt;
     }
-    public static Reservation createHold(Member member, Seat seat,int holdMinutes) {
-        return Reservation.builder().member(member).seat(seat).expiredAt(LocalDateTime.now().plusMinutes(holdMinutes)).build();}
+    public static Reservation createHold(Member member, Seat seat,LocalDateTime expiredAt) {
+        return Reservation.builder().member(member).seat(seat).expiredAt(expiredAt).build();}
     public boolean isCanceled() {
         return this.status == ReservationStatus.CANCELED;
     }

@@ -13,17 +13,10 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class ReservationExpireScheduler {
-    private final ReservationRepository reservationRepository;
+    private final ReservationService reservationService;
     @Transactional
     @Scheduled(fixedDelay=60000)
     public void expireReservations(){
-        LocalDateTime now=LocalDateTime.now();
-        List<Reservation> expired=reservationRepository.findExpired(LocalDateTime.now());
-        for(Reservation r: expired){
-            boolean canceled=r.cancelIfExpired(now);
-            if(canceled){
-
-            r.getSeat().release();}
-        }
+       reservationService.expireHolds();
     }
 }
