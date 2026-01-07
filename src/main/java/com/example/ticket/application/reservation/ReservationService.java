@@ -10,6 +10,7 @@ import com.example.ticket.global.exception.ApiException;
 import com.example.ticket.global.exception.ErrorCode;
 import com.example.ticket.presentation.reservation.dto.ReservationResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,47 +29,47 @@ public class ReservationService {
     private static final int HOLD_MINUTES=5;
     // Day6: "예매 생성" = 좌석 HOLD + Reservation PENDING 생성
     public ReservationResponse create(Long eventId, Long seatId, Long memberId) {
+        try {
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+            Seat seat = seatRepository.findByIdAndEventId(eventId, seatId)
+                    .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
 
-        Seat seat = seatRepository.findByIdWithLock(eventId, seatId)
-                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
 
-        // 좌석이 이미 HOLD/SOLD 등 점유 상태면 막기
-        if (!seat.isAvailable()) { // 네 기존 메서드 재사용
-            throw new ApiException(ErrorCode.ALREADY_RESERVED);
+            // Day5 로직: 좌석 선점(HOLD)
+            seat.hold();
+
+            LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(HOLD_MINUTES);
+            Reservation saved = reservationRepository.save(
+                    Reservation.createHold(member, seat, expiredAt)
+            );
+
+            return new ReservationResponse(
+                    saved.getId(),
+                    member.getId(),
+                    seat.getId(),
+                    seat.getSeatNo(),
+                    saved.getReservedAt()
+            );
+        }catch(ObjectOptimisticLockingFailureException e){
+            throw new ApiException(ErrorCode.CONCURRENT_SEAT_UPDATE);
+        }
         }
 
-        // Day5 로직: 좌석 선점(HOLD)
-        seat.hold();
+        @Transactional(readOnly = true)
+        public ReservationResponse get (Long reservationId){
+            Reservation r = reservationRepository.findById(reservationId)
+                    .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
 
-        LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(HOLD_MINUTES);
-        Reservation saved = reservationRepository.save(
-                Reservation.createHold(member,seat,expiredAt)
-        );
+            return new ReservationResponse(
+                    r.getId(),
+                    r.getMember().getId(),
+                    r.getSeat().getId(),
+                    r.getSeat().getSeatNo(),
+                    r.getReservedAt()
+            );
 
-        return new ReservationResponse(
-                saved.getId(),
-                member.getId(),
-                seat.getId(),
-                seat.getSeatNo(),
-                saved.getReservedAt()
-        );
-    }
-
-    @Transactional(readOnly = true)
-    public ReservationResponse get(Long reservationId) {
-        Reservation r = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
-
-        return new ReservationResponse(
-                r.getId(),
-                r.getMember().getId(),
-                r.getSeat().getId(),
-                r.getSeat().getSeatNo(),
-                r.getReservedAt()
-        );
     }
 
     // Day6: 결제 성공 확정
@@ -76,7 +77,7 @@ public class ReservationService {
 
 
     public void cancel(Long reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId)
+       try{ Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
         if (!reservation.isHold()) {
             // 이미 canceled면 기존 에러 유지
@@ -85,14 +86,11 @@ public class ReservationService {
             }
             throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS); // 또는 INVALID_RESERVATION_STATUS 추가 추천
         }
-        Long eventId=reservation.getSeat().getEvent().getId();
-        Long seatId=reservation.getSeat().getId();
-        Seat seat = seatRepository.findByIdWithLock(
-                eventId,seatId
-        ).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
-
         reservation.cancel();
-        seat.release(); // HOLD 해제
+        reservation.getSeat().release();
+       } catch (ObjectOptimisticLockingFailureException e){
+           throw new ApiException(ErrorCode.CONCURRENT_SEAT_UPDATE);
+       }// HOLD 해제
     }
     public int expireHolds() {
         LocalDateTime now = LocalDateTime.now();

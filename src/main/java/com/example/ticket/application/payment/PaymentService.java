@@ -22,7 +22,7 @@ public class PaymentService {
     private final SeatRepository seatRepository;
     private final PaymentGateway paymentGateway;
     public void pay(Long reservationId, Long memberId, Long amount){
-        Reservation reservation=reservationRepository.findById(reservationId).orElseThrow(()->new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        Reservation reservation=reservationRepository.findById(reservationId).orElseThrow(()->new ApiException(ErrorCode.NOT_FOUND));
         if(!reservation.isHold()){
             throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
         }

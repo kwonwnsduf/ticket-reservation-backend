@@ -322,3 +322,31 @@ CONFIRMED → CANCELLED
 - 서비스 로직을 도메인으로 이동시키는 이유
 
 
+---
+# Day12 – Optimistic Lock 적용
+
+## 1. 개요
+
+Day12에서는 좌석 선점(HOLD) 로직의 동시성 제어 방식을  
+기존 **DB 비관적 락(Pessimistic Lock)** 에서  
+**JPA Optimistic Lock(@Version)** 기반 구조로 전환하였다.
+
+이를 통해:
+- DB 락 대기(blocking)를 제거하고
+- 커밋 시점에 충돌을 감지하며
+- 충돌 발생 시 사용자에게 **409 Conflict**로 명확히 응답하는
+  확장성 있는 구조를 구현하였다.
+
+---
+
+## 2. 적용 배경
+
+기존 구조는 다음과 같이 비관적 락을 사용하였다.
+
+```java
+@Lock(LockModeType.PESSIMISTIC_WRITE)
+Optional<Seat> findByIdWithLock(...)
+
+
+
+
