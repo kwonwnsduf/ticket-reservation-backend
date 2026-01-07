@@ -23,8 +23,10 @@ public enum ErrorCode {
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "예매가 존재하지 않습니다."),
     INVALID_RESERVATION_STATUS(HttpStatus.CONFLICT, "예매 상태가 올바르지 않습니다."),
     RESERVATION_EXPIRED(HttpStatus.CONFLICT, "예매가 만료되었습니다."),
-    ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 예매입니다.");
-
+    ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 예매입니다."),
+    // ====payment====
+    DUPLICATE_PAYMENT(HttpStatus.CONFLICT, "이미 해달 예약에 대한 결제가 존재합니다"),
+    PAYMENT_FAILED(HttpStatus.BAD_REQUEST,"결제에 실패했습니다.");
     private final HttpStatus status;
     private final String message;
     ErrorCode(HttpStatus status, String message){

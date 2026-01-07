@@ -88,6 +88,25 @@ public class Reservation {
         this.status = ReservationStatus.CANCELED;
         return true;
     }
+    public void confirmAfterPayment() {
+        if (this.status != ReservationStatus.HOLD) {
+            throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
+        }
+        if (LocalDateTime.now().isAfter(this.expiredAt)) {
+            throw new ApiException(ErrorCode.RESERVATION_EXPIRED);
+        }
+        this.status = ReservationStatus.CONFIRMED;
+        this.confirmedAt = LocalDateTime.now();
+    }
+
+    // 결제 실패 보상
+    public void cancelByPaymentFailure() {
+        if (this.status != ReservationStatus.HOLD) {
+            throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
+        }
+        this.status = ReservationStatus.CANCELED;
+    }
+
 
 
 }

@@ -299,3 +299,26 @@ Day 7 - 예매 취소 및 트랜잭션 처리
 - 실무 예매 시스템 필수 기능 구현
 
 
+---
+
+# Day11 - Reservation Expire Scheduler & State Flow
+
+## 1. 구현 목표
+- HOLD 상태 예약 5분 후 자동 만료 처리
+- 좌석 상태 자동 복구
+
+## 2. 핵심 기능
+- @Scheduled 기반 만료 처리
+- Reservation 상태 전이 정리
+- 도메인 메서드 중심 리팩토링
+
+## 3. 상태 흐름
+AVAILABLE → HOLD → CONFIRMED  
+HOLD → EXPIRED  
+CONFIRMED → CANCELLED
+
+## 4. 배운 점
+- 스케줄러를 통한 비즈니스 규칙 자동화
+- 서비스 로직을 도메인으로 이동시키는 이유
+
+
