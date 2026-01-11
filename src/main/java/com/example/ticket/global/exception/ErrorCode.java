@@ -28,7 +28,12 @@ public enum ErrorCode {
 
     // ====payment====
     DUPLICATE_PAYMENT(HttpStatus.CONFLICT, "이미 해당 예약에 대한 결제가 존재합니다"),
-    PAYMENT_FAILED(HttpStatus.BAD_REQUEST,"결제에 실패했습니다.");
+    PAYMENT_FAILED(HttpStatus.BAD_REQUEST,"결제에 실패했습니다."),
+    //===redis hold====
+    SEAT_ALREADY_HELD(HttpStatus.CONFLICT,"이미 다른 사용자가 선택한 좌석입니다."),
+    HOLD_EXPIRED(HttpStatus.NOT_FOUND,"좌석 선점 시간이 만료되었습니다. 다시 선택해주세요."),
+    HOLD_NOT_OWNER(HttpStatus.FORBIDDEN,"해당 좌석을 선점한 사용자가 아닙니다.");
+
     private final HttpStatus status;
     private final String message;
     ErrorCode(HttpStatus status, String message){

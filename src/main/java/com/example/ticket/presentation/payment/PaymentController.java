@@ -2,6 +2,7 @@ package com.example.ticket.presentation.payment;
 
 import com.example.ticket.application.payment.PaymentService;
 import com.example.ticket.presentation.payment.dto.PaymentRequest;
+import com.example.ticket.presentation.payment.dto.PaymentResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,13 +13,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class PaymentController {
     private final PaymentService paymentService;
-    @PostMapping("/reservations/{reservationId}/payments")
-    public ResponseEntity<Void> pay(
-            @PathVariable Long reservationId,
+    @PostMapping("/events/{eventId}/seats/{seatId}/payments")
+    public ResponseEntity<PaymentResponse> pay(
+            @PathVariable Long eventId,
+            @PathVariable Long seatId,
             @RequestBody @Valid PaymentRequest req
     ){
-        paymentService.pay(reservationId,req.getMemberId(),req.getAmount());
-        return ResponseEntity.ok().build();
+       Long reservationId= paymentService.pay(eventId,seatId,req.getMemberId(),req.getAmount());
+        return ResponseEntity.ok(new PaymentResponse(reservationId));
     }
 
 }

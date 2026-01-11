@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "reservations")
+@Table(name = "reservations", uniqueConstraints = @UniqueConstraint(columnNames = {"seat_id"}))
 public class Reservation {
 
     @Id
@@ -38,74 +38,40 @@ public class Reservation {
 
     @Column(nullable = false)
     private LocalDateTime reservedAt;
-     @Column(nullable = false)
-     private LocalDateTime expiredAt;
+
 
      private LocalDateTime confirmedAt;
 
     @Builder
-    private Reservation (Member member, Seat seat,LocalDateTime expiredAt) {
+    private  Reservation (Member member, Seat seat,ReservationStatus status) {
         this.member = member;
         this.seat = seat;
-    this.status = ReservationStatus.HOLD;
+    this.status = status;
         this.reservedAt = LocalDateTime.now();
-        this.expiredAt=expiredAt;
+        if (status == ReservationStatus.CONFIRMED) {
+            this.confirmedAt = LocalDateTime.now();}
+
+
     }
-    public static Reservation createHold(Member member, Seat seat,LocalDateTime expiredAt) {
-        return Reservation.builder().member(member).seat(seat).expiredAt(expiredAt).build();}
+    public static Reservation createConfirmed(Member member, Seat seat) {
+        return Reservation.builder().member(member).seat(seat).status(ReservationStatus.CONFIRMED).build();}
     public boolean isCanceled() {
         return this.status == ReservationStatus.CANCELED;
     }
-    public boolean isHold() {
-        return this.status == ReservationStatus.HOLD;
-    }
-    public boolean isExpired(LocalDateTime now) {
-        return this.status == ReservationStatus.HOLD && this.expiredAt.isBefore(now);
-    }
 
 
-    public void cancel() {
+
+    public void cancelConfirmed() {
         if (this.status == ReservationStatus.CANCELED) {
             throw new ApiException(ErrorCode.ALREADY_CANCELED);
         }
-        if (this.status != ReservationStatus.HOLD) {
+        if (this.status != ReservationStatus.CONFIRMED) {
             throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
         }
         this.status = ReservationStatus.CANCELED;
-    }
-    public void confirm() {
-        if (this.status != ReservationStatus.HOLD) {
-            throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
-        }
-        if (LocalDateTime.now().isAfter(this.expiredAt)) {
-            throw new ApiException(ErrorCode.RESERVATION_EXPIRED);
-        }
-        this.status = ReservationStatus.CONFIRMED;
-        this.confirmedAt = LocalDateTime.now();
-    }
-    public boolean cancelIfExpired(LocalDateTime now) {
-        if (!isExpired(now)) return false;
-        this.status = ReservationStatus.CANCELED;
-        return true;
-    }
-    public void confirmAfterPayment() {
-        if (this.status != ReservationStatus.HOLD) {
-            throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
-        }
-        if (LocalDateTime.now().isAfter(this.expiredAt)) {
-            throw new ApiException(ErrorCode.RESERVATION_EXPIRED);
-        }
-        this.status = ReservationStatus.CONFIRMED;
-        this.confirmedAt = LocalDateTime.now();
     }
 
-    // 결제 실패 보상
-    public void cancelByPaymentFailure() {
-        if (this.status != ReservationStatus.HOLD) {
-            throw new ApiException(ErrorCode.INVALID_RESERVATION_STATUS);
-        }
-        this.status = ReservationStatus.CANCELED;
-    }
+
 
 
 

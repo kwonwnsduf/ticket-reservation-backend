@@ -9,11 +9,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
-    @Query("""
-    select r from Reservation r
-    join fetch r.seat s
-    where r.status = com.example.ticket.domain.reservation.ReservationStatus.HOLD
-      and r.expiredAt < :now
-""")
-    List<Reservation> findAllExpiredHolds(@Param("now") LocalDateTime now);
+
 }

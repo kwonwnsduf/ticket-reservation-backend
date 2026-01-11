@@ -348,5 +348,35 @@ Day12에서는 좌석 선점(HOLD) 로직의 동시성 제어 방식을
 Optional<Seat> findByIdWithLock(...)
 
 
+```
+---
+# Day13 – Redis 기반 좌석 HOLD 관리 (고급 설계)
+
+## 🎯 목표
+
+- 좌석 HOLD 상태를 **DB가 아닌 Redis**로 관리
+- TTL(Time To Live)을 활용하여 **자동 만료 처리**
+- DB에는 **확정(CONFIRMED) 예약만 저장**
+- 스케줄러 기반 만료 로직 제거 → **Redis TTL로 대체**
+- **결제(pay)가 확정 책임을 단일로 담당**하도록 구조 정리
+
+---
+
+## 🧩 설계 개요
+
+| 구분 | 저장 위치 | 설명 |
+|------|-----------|------|
+| 좌석 AVAILABLE / OCCUPIED | RDB (Seat 테이블) | 최종 확정 상태만 관리 |
+| 좌석 HOLD | Redis | 임시 선점, TTL 자동 만료 |
+| 예약(CONFIRMED) | RDB (Reservation 테이블) | 결제 성공 시에만 생성 |
+| 결제(Payment) | RDB (Payment 테이블) | Reservation 확정 이후 기록 |
+
+> **핵심 원칙**  
+> 임시 상태(HOLD)는 Redis, 영구 상태(CONFIRMED/OCCUPIED)는 DB로 분리하여  
+> 성능, 확장성, 동시성 안전성을 동시에 확보
+
+---
+
+
 
 
