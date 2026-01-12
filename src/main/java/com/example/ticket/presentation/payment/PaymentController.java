@@ -6,6 +6,8 @@ import com.example.ticket.presentation.payment.dto.PaymentResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,13 +15,18 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class PaymentController {
     private final PaymentService paymentService;
+    private Long currentMemberId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (Long) auth.getPrincipal();
+    }
     @PostMapping("/events/{eventId}/seats/{seatId}/payments")
     public ResponseEntity<PaymentResponse> pay(
             @PathVariable Long eventId,
             @PathVariable Long seatId,
             @RequestBody @Valid PaymentRequest req
     ){
-       Long reservationId= paymentService.pay(eventId,seatId,req.getMemberId(),req.getAmount());
+        Long memberId = currentMemberId();
+       Long reservationId= paymentService.pay(eventId,seatId,memberId,req.getAmount());
         return ResponseEntity.ok(new PaymentResponse(reservationId));
     }
 

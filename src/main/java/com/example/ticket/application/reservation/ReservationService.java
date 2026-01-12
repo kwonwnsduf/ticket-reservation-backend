@@ -46,23 +46,27 @@ public class ReservationService {
            boolean ok=holdStore.tryHold(eventId,seatId,member.getId(),HOLD_TTL);
            if(!ok) throw new ApiException(ErrorCode.SEAT_ALREADY_HELD);
 
-           return new HoldResponse(member.getId(),seat.getId(),seat.getSeatNo(),HOLD_TTL.toMinutes());
+           return new HoldResponse(seat.getId(),seat.getSeatNo(),HOLD_TTL.toMinutes());
         }
 
         @Transactional(readOnly = true)
-        public ReservationResponse get (Long reservationId){
+        public ReservationResponse getMyReservation(Long reservationId, Long memberId) {
             Reservation r = reservationRepository.findById(reservationId)
                     .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
 
+            if (!r.getMember().getId().equals(memberId)) {
+                throw new ApiException(ErrorCode.NOT_OWNER); // 혹은 NOT_OWNER
+            }
+
             return new ReservationResponse(
                     r.getId(),
-                    r.getMember().getId(),
                     r.getSeat().getId(),
                     r.getSeat().getSeatNo(),
                     r.getReservedAt()
             );
+        }
 
-    }
+
 
     // Day6: 결제 성공 확정
 //   public ReservationResponse confirm(Long eventId, Long seatId, Long memberId) {

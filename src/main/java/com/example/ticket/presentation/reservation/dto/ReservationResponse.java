@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ReservationResponse {
     private Long reservationId;
-    private Long memberId;
+   // private Long memberId;
     private Long seatId;
     private String seatNo;
     private LocalDateTime reservedAt;

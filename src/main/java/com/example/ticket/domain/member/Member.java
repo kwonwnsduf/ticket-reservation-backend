@@ -19,14 +19,21 @@ public class Member {
     private String email;
     @Column(nullable = false)
     private String password;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false)
+    private Role role;
     
     @Builder
-    private Member(String email, String password){
+    private Member(String email, String password,Role role){
         this.email=email;
         this.password=password;
+        this.role=role;
         
     }
-    public boolean matchPassword(String raw){
-        return this.password.equals(raw);
+    public void changePassword(String encodedPassword){
+        this.password=encodedPassword;
     }
+   // public boolean matchPassword(String raw){
+    //    return this.password.equals(raw);
+   // }
 }

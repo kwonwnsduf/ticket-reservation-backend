@@ -1,14 +1,12 @@
 package com.example.ticket.presentation.reservation;
 import com.example.ticket.application.reservation.ReservationService;
 import com.example.ticket.presentation.reservation.dto.HoldResponse;
-import com.example.ticket.presentation.reservation.dto.ReservationCreateRequest;
 import com.example.ticket.presentation.reservation.dto.ReservationResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,13 +14,18 @@ import java.net.URI;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private Long currentMemberId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (Long) auth.getPrincipal();
+    }
     @PostMapping("/events/{eventId}/seats/{seatId}/hold")
     public ResponseEntity<HoldResponse> hold(
             @PathVariable Long eventId,
-            @PathVariable Long seatId,
-            @RequestBody @Valid ReservationCreateRequest req
+            @PathVariable Long seatId
+
     ) {
-        HoldResponse res = reservationService.create(eventId, seatId, req.getMemberId());
+        Long memberId = currentMemberId();
+        HoldResponse res = reservationService.create(eventId, seatId, memberId);
         return ResponseEntity.ok(res);
     }
 
@@ -39,17 +42,19 @@ public class ReservationController {
 
     @GetMapping("/reservations/{reservationId}")
     public ResponseEntity<ReservationResponse> get(@PathVariable Long reservationId) {
-        return ResponseEntity.ok(reservationService.get(reservationId));
+        Long memberId = currentMemberId();
+        return ResponseEntity.ok(reservationService.getMyReservation(reservationId,memberId));
     }
 
     /** Day13 고급: HOLD 취소 */
     @PostMapping("/events/{eventId}/seats/{seatId}/hold/cancel")
     public ResponseEntity<Void> cancelHold(
             @PathVariable Long eventId,
-            @PathVariable Long seatId,
-            @RequestBody @Valid ReservationCreateRequest req
+            @PathVariable Long seatId
+
     ) {
-        reservationService.cancelHold(eventId, seatId, req.getMemberId());
+        Long memberId = currentMemberId();
+        reservationService.cancelHold(eventId, seatId, memberId);
         return ResponseEntity.noContent().build();
     }
 

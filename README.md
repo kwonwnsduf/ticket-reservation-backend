@@ -376,6 +376,26 @@ Optional<Seat> findByIdWithLock(...)
 > 성능, 확장성, 동시성 안전성을 동시에 확보
 
 ---
+# Day14 – JWT 기반 인증/인가 구현 (Spring Security)
+
+## 📌 개요
+Day14에서는 Spring Security와 JWT(JSON Web Token)를 이용해 **Stateless 인증/인가 구조**를 구현하였다.  
+로그인 시 JWT Access Token을 발급하고, 이후 모든 보호 API는 **Bearer Token 기반 인증**을 통해 접근하도록 구성하였다.
+
+---
+
+## 🎯 
+
+- Spring Security + JWT 인증 구조 설계
+- 로그인 시 Access Token 발급
+- JwtFilter를 통한 요청 필터링 및 인증 처리
+- SecurityContext에 사용자 정보 저장
+- Role 기반 인가(Authorization) 구조 준비
+
+---
+
+
+
 
 
 

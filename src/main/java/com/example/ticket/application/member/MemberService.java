@@ -13,18 +13,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class MemberService {
     private final MemberRepository memberRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     public Long signUp(String email, String password){
         if(memberRepository.existsByEmail(email)){
             throw new ApiException(ErrorCode.DUPLICATE_EMAIL);
         }
-        Member member=Member.builder().email(email).password(password).build();
+        String encoded=passwordEncoder.encode(password);
+        Member member=Member.builder().email(email).password(encoded).build();
         return memberRepository.save(member).getId();
     }
     @Transactional(readOnly=true)
     public Long login(String email, String password){
         Member member=memberRepository.findByEmail(email).orElseThrow(()->new ApiException(ErrorCode.MEMBER_NOT_FOUND));
 
-    if(!member.matchPassword(password)){
+    if(!passwordEncoder.matches(password, member.getPassword())){
         throw new ApiException(ErrorCode.INVALID_PASSWORD);
     }
     return member.getId();

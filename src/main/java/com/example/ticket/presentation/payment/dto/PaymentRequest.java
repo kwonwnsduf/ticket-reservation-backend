@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PaymentRequest {
-    @NotNull
-    private Long memberId;
+
     @NotNull
     private Long amount;
 }
