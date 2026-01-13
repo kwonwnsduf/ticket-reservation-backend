@@ -393,7 +393,36 @@ Day14에서는 Spring Security와 JWT(JSON Web Token)를 이용해 **Stateless �
 - Role 기반 인가(Authorization) 구조 준비
 
 ---
+# Day15 – 테스트 & 문서화 (Service Layer 중심)
 
+## 1. Day15 목표
+
+Day15의 목표는 **지금까지 구현한 핵심 비즈니스 로직을 테스트 코드로 검증**하는 것이다.  
+특히 예매 흐름과 결제 흐름이라는 서비스의 핵심 로직을 **성공/실패/예외 시나리오까지 포함하여 검증**하는 데 집중하였다.
+
+검증 대상:
+- ReservationService (좌석 HOLD, 소유자 검증)
+- PaymentService (결제, 좌석 확정, 보상 트랜잭션)
+
+> 단순히 “동작하는 코드”를 넘어서,  
+> **“신뢰할 수 있는 코드”로 만드는 것을 목표**로 한다.
+
+---
+
+## 2. 테스트 전략
+
+### 2-1. 단위 테스트(Unit Test) + Mockito
+
+- DB, Redis, 외부 결제 모듈(PG), Repository는 **모두 mock 처리**
+- **Service 로직만 단독으로 검증**
+- 빠르고, 실패 원인을 명확히 파악할 수 있는 구조
+
+사용 기술:
+- JUnit5
+- Mockito
+- assertThrows, assertEquals, verify
+
+---
 
 
 

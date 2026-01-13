@@ -29,10 +29,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 String role = (String) claims.get("role");
                 var auth = new UsernamePasswordAuthenticationToken(memberId, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
                 SecurityContextHolder.getContext().setAuthentication(auth);
-            }catch(Exception e){
-                e.printStackTrace();
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+            }catch(Exception ignore){
+
             }
         }
         filterChain.doFilter(request,response);
