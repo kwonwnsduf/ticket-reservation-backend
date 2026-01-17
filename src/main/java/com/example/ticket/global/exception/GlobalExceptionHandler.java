@@ -2,12 +2,13 @@ package com.example.ticket.global.exception;
 
 import com.example.ticket.global.dto.ApiResponse;
 import com.example.ticket.global.dto.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(ApiException.class)
@@ -38,6 +39,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<ErrorResponse>> handleEtc(Exception e) {
         // 운영에서는 로깅 추가 추천
+        log.error("Unhandled exception", e); // ✅ 이게 핵심
         ErrorResponse error = new ErrorResponse("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");
         return ResponseEntity.status(500).body(ApiResponse.fail(error));
     }

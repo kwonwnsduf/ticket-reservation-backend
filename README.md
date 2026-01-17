@@ -426,6 +426,55 @@ Day15의 목표는 **지금까지 구현한 핵심 비즈니스 로직을 테스
 
 
 
+# Day16 – Docker 기반 로컬 배포 환경 구축
+
+## 🎯 목표
+Spring Boot 애플리케이션을 로컬 개발 환경(IntelliJ 실행)이 아닌  
+**Docker 기반의 독립된 실행 환경에서 배포 형태로 실행**한다.
+
+- Spring Boot 애플리케이션 JAR 빌드
+- Docker 이미지로 패키징
+- MySQL을 별도 컨테이너로 분리
+- docker-compose로 애플리케이션 + DB 동시 실행
+- JWT 인증이 포함된 API 호출까지 검증
+
+---
+
+## 🏗️ 시스템 구성
+
+Client (curl / browser)
+|
+v
+Spring Boot App (Docker Container)
+|
+v
+MySQL (Docker Container)
+
+
+- 애플리케이션과 데이터베이스를 **완전히 분리된 컨테이너**로 실행
+- 실제 운영 환경과 유사한 구조를 로컬에서 재현
+
+---
+
+## 🧱 사용 기술
+
+- Java 17
+- Spring Boot 3.x
+- Spring Security + JWT
+- JPA (Hibernate)
+- MySQL 8.0
+- Docker
+- Docker Compose
+
+##배운점
+배포의 핵심은 실행 환경 분리임을 이해
+
+Docker 네트워크 환경에서의 DB 연결 방식 이해
+
+JWT 인증이 포함된 상태에서 컨테이너 환경 테스트 경험
+
+배포 환경에서 발생하는 403 / 500 오류를 직접 경험하며
+이후 장애 분석(Day17)을 위한 기반 확보
 
 
 

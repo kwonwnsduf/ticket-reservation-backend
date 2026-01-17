@@ -25,8 +25,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http.csrf(csrf->csrf.disable())
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).
-                authorizeHttpRequests(auth->auth.requestMatchers("/auth/**").permitAll().
-                        requestMatchers("/admin/**").hasRole("ADMIN").anyRequest().authenticated()).
+                authorizeHttpRequests(auth->auth.requestMatchers("/auth/**").permitAll().requestMatchers("/health").permitAll().requestMatchers("/", "/error").permitAll()
+                        .  requestMatchers("/admin/**").hasRole("ADMIN").anyRequest().authenticated()).
                 addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     };
