@@ -40,42 +40,62 @@ public class PaymentService {
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        Payment payment = paymentRepository.save(Payment.pending(amount));
+        String txId = null;
+
+        try {
+            // 1. 결제
+            txId = paymentGateway.charge(memberId, amount);
+            payment.markCharged(txId);
+            return confirmInDb(eventId, seatId, member, payment);
+        }catch (ObjectOptimisticLockingFailureException e) {
+            if (txId != null) safeCancel(txId, payment, "OPTIMISTIC_LOCK");
+            payment.fail(ErrorCode.CONCURRENT_SEAT_UPDATE.name());
+            throw new ApiException(ErrorCode.CONCURRENT_SEAT_UPDATE);}
+        catch (DataIntegrityViolationException e) {
+            if (txId != null) safeCancel(txId, payment, "DATA_INTEGRITY");
+            payment.fail(ErrorCode.DUPLICATE_PAYMENT.name());
+            throw new ApiException(ErrorCode.DUPLICATE_PAYMENT);}
+        catch (ApiException e) {
+            if (txId != null) safeCancel(txId, payment, e.getErrorCode().name());
+            payment.fail(e.getErrorCode().name());
+            throw e;}
+        catch (Exception e) {
+            if (txId != null) safeCancel(txId, payment, e.getClass().getSimpleName());
+            payment.fail(ErrorCode.PAYMENT_FAILED.name());
+            throw new ApiException(ErrorCode.PAYMENT_FAILED);
+
+        }finally {
+            holdStore.release(eventId, seatId);
+        }
+
+
+    }
+
+    @Transactional
+    protected Long confirmInDb(Long eventId, Long seatId, Member member, Payment payment) {
 
         Seat seat = seatRepository.findByIdAndEventId(eventId, seatId)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
 
         if (seat.isOccupied()) throw new ApiException(ErrorCode.ALREADY_RESERVED);
 
+        seat.occupy(); // 낙관락 충돌 가능
+
+        Reservation reservation = reservationRepository.save(
+                Reservation.createConfirmed(member, seat)
+        );
+
+        payment.succeed(reservation);
+
+        return reservation.getId();
+    }
+    private void safeCancel(String txId, Payment payment, String reason) {
         try {
-            // 1. 결제
-            paymentGateway.charge(memberId, amount);
-
-            // 2. 좌석 확정 (여기서 동시성 터질 수 있음)
-            seat.occupy();
-
-            // 3. 예약 확정 저장
-            Reservation reservation = reservationRepository.save(
-                    Reservation.createConfirmed(member, seat)
-            );
-
-            // 4. 결제 기록 저장
-            Payment payment = paymentRepository.save(Payment.request(reservation, amount));
-            payment.succeed();
-
-            return reservation.getId();
-
-        } catch (ObjectOptimisticLockingFailureException e) {
-            throw new ApiException(ErrorCode.CONCURRENT_SEAT_UPDATE);
-
-        } catch (DataIntegrityViolationException e) {
-            throw new ApiException(ErrorCode.DUPLICATE_PAYMENT);
-
-        } catch (Exception e) {
-            throw new ApiException(ErrorCode.PAYMENT_FAILED);
-
-        } finally {
-            // 5. HOLD 정리 (성공/실패/예외 상관없이)
-            holdStore.release(eventId, seatId);
+            paymentGateway.cancel(txId);
+            payment.cancel();
+        } catch (Exception cancelEx) {
+            payment.cancelFailed("CANCEL_FAIL:" + reason + ":" + cancelEx.getClass().getSimpleName());
         }
     }
 }

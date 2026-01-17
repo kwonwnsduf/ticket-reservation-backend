@@ -17,13 +17,15 @@ public class Payment {
     @Id @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
     @OneToOne(fetch=FetchType.LAZY,optional = false)
-    @JoinColumn(name="reservation_id",nullable = false)
+    @JoinColumn(name="reservation_id")
     private Reservation reservation;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus status;
     @Column(nullable = false)
     private Long amount;
+    @Column(length = 100)
+    private String txId;
 
     private String failReason;
 
@@ -32,19 +34,32 @@ public class Payment {
 
     private LocalDateTime completedAt;
 
-    @Builder
-    private Payment(Reservation reservation, Long amount) {
-        this.reservation = reservation;
+    private Payment(Long amount) {
         this.amount = amount;
-        this.status = PaymentStatus.REQUESTED;
+        this.status = PaymentStatus.PENDING;
         this.requestedAt = LocalDateTime.now();
     }
-
-    public static Payment request(Reservation reservation,Long amount){
-        return Payment.builder().reservation(reservation).amount(amount).build();
+    public static Payment pending(Long amount) {
+        return new Payment(amount);
     }
-    public void succeed() {
+    public void markCharged(String txId) {
+        this.status = PaymentStatus.CHARGED;
+        this.txId = txId;
+    }
+//   @Builder
+//    private Payment(Reservation reservation, Long amount) {
+//        this.reservation = reservation;
+//        this.amount = amount;
+//        this.status = PaymentStatus.REQUESTED;
+//        this.requestedAt = LocalDateTime.now();
+//    }
+
+//    public static Payment request(Reservation reservation,Long amount){
+//        return Payment.builder().reservation(reservation).amount(amount).build();
+//    }
+  public void succeed(Reservation reservation) {
         this.status = PaymentStatus.SUCCESS;
+        this.reservation=reservation;
         this.completedAt = LocalDateTime.now();
         this.failReason = null;
     }
@@ -53,7 +68,15 @@ public class Payment {
         this.completedAt = LocalDateTime.now();
         this.failReason = reason;
     }
-    public boolean isSuccess() { return status == PaymentStatus.SUCCESS; }
-    public boolean isFailed() { return status == PaymentStatus.FAILED; }
+    public void cancel() {
+        this.status = PaymentStatus.CANCELED;
+        this.completedAt = LocalDateTime.now();
+    }
+    public void cancelFailed(String reason) {
+        this.status = PaymentStatus.CANCEL_FAILED;
+        this.completedAt = LocalDateTime.now();
+        this.failReason = reason;
+    }
+
 
 }
