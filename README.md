@@ -557,3 +557,230 @@ cancel 호출 검증
 “결제는 성공했지만 예약은 실패한 상태”를 안전하게 처리하는 방법 학습
 
 실무 서비스에 가까운 결제/예약 안정성 설계 경험
+
+---
+Day18
+🎟️ Ticket Reservation Backend System
+
+동시성 이슈가 빈번한 좌석 예매 환경에서
+중복 예매를 방지하고, 결제 실패까지 고려한
+백엔드 티켓 예매 시스템
+
+📌 프로젝트 소개
+
+이 프로젝트는 좌석 단위 예매 서비스에서 발생할 수 있는
+동시성 문제, 결제 실패, 예매 만료 처리를 안정적으로 해결하기 위해 설계된
+백엔드 시스템입니다.
+
+단순 CRUD 구현을 넘어,
+
+다수의 사용자가 동시에 같은 좌석을 요청하는 상황
+
+결제 성공/실패에 따른 상태 불일치
+
+예매 HOLD 상태의 만료 처리
+
+장애 발생 시 데이터 정합성 유지
+
+와 같은 실무에서 자주 발생하는 문제를 직접 설계·구현하는 것을 목표로 했습니다.
+
+🛠️ 기술 스택
+Backend
+
+Java 17
+
+Spring Boot
+
+Spring Data JPA (Hibernate)
+
+Database
+
+MySQL (운영 환경)
+
+H2 (테스트 환경)
+
+Concurrency / Cache
+
+Redis
+
+좌석 HOLD TTL 관리
+
+분산 환경에서 동시성 제어
+
+Auth
+
+JWT (Stateless Authentication)
+
+Infra / Tool
+
+Docker
+
+Gradle
+
+Test
+
+JUnit5
+
+Mockito
+
+🧱 아키텍처
+Layered Architecture
+Presentation Layer
+└─ Controller (API 요청/응답)
+
+Application Layer
+└─ Service (트랜잭션 & 유즈케이스)
+
+Domain Layer
+└─ Entity / Repository / Domain Logic
+
+Infrastructure Layer
+└─ 외부 시스템 (DB, Redis, Payment Gateway)
+
+설계 원칙
+
+도메인 로직은 Entity 중심
+
+트랜잭션 경계는 Application Service
+
+외부 시스템은 인터페이스로 추상화
+
+🔑 핵심 기능
+기능	설명
+좌석 예매	좌석 HOLD → 예매 CONFIRMED
+동시성 제어	Optimistic Lock + Redis
+예매 만료	TTL 기반 HOLD 자동 해제
+결제 처리	PG 인터페이스 추상화
+결제 실패 대응	보상 트랜잭션
+인증/인가	JWT 기반 API 보호
+⭐ 핵심 설계 포인트
+1️⃣ 좌석 중복 예매 방지
+
+Seat 엔티티에 @Version 적용
+
+Optimistic Lock을 통해 동시 요청 충돌 감지
+
+충돌 발생 시 예외 처리
+
+@Version
+private Long version;
+
+
+👉 Pessimistic Lock 대신 Optimistic Lock 선택
+
+읽기 요청이 많고, 충돌 확률이 상대적으로 낮은 좌석 예매 특성 고려
+
+2️⃣ Redis를 이용한 HOLD 상태 관리
+
+좌석 예매 시 Redis에 SETNX + TTL
+
+TTL 만료 시 자동 HOLD 해제
+
+DB 트랜잭션과 분리하여 성능 확보
+
+Boolean ok = redis.opsForValue()
+.setIfAbsent(key, memberId, ttl);
+
+
+👉 DB 스케줄링보다 Redis TTL 선택
+
+분산 환경에서도 일관성 유지
+
+불필요한 배치 작업 제거
+
+3️⃣ 결제 로직 분리 & 테스트 가능 구조
+public interface PaymentGateway {
+void charge(Long memberId, Long amount);
+void cancel(String txId);
+}
+
+
+외부 결제 시스템을 인터페이스로 추상화
+
+FakePaymentGateway를 통해 테스트 환경 구성
+
+실제 PG 연동 시 교체 가능
+
+👉 테스트 가능성과 확장성을 동시에 고려
+
+4️⃣ 결제 실패 시 보상 트랜잭션
+
+문제 상황:
+
+결제 성공
+
+DB 저장 실패 → 데이터 불일치
+
+해결:
+
+결제 취소(cancel)를 통한 보상 트랜잭션
+
+DB 트랜잭션과 외부 결제 트랜잭션 분리 관리
+
+5️⃣ 상태 전이 명확화
+Reservation Status
+HOLD → CONFIRMED → CANCELED
+
+Seat Status
+AVAILABLE → HELD → OCCUPIED
+
+
+상태 전이는 도메인 메서드로만 변경 가능
+
+잘못된 상태 요청은 예외 처리
+
+🧪 테스트 전략
+
+단위 테스트 중심
+
+외부 의존성은 Mockito로 Mock 처리
+
+실패 시나리오 테스트 집중
+
+결제 실패
+
+락 충돌
+
+예매 만료
+
+doThrow(new RuntimeException("pg fail"))
+.when(paymentGateway)
+.charge(memberId, amount);
+
+⚠️ 트러블 슈팅
+좌석 중복 예매 발생
+
+원인: 동시 요청 처리 미흡
+
+해결: Optimistic Lock + 예외 처리
+
+결제 성공 후 DB 실패
+
+원인: 외부 시스템과 DB 트랜잭션 분리
+
+해결: 보상 트랜잭션 도입
+
+HOLD 만료 처리 복잡성
+
+원인: DB 기반 만료 처리의 성능 문제
+
+해결: Redis TTL로 단순화
+
+▶️ 실행 방법
+docker-compose up
+./gradlew bootRun
+
+📈 프로젝트를 통해 얻은 것
+
+동시성 제어에 대한 실질적인 이해
+
+트랜잭션 경계 설계 경험
+
+테스트 가능한 구조 설계 능력
+
+실무 장애 시나리오 대응 경험
+
+🔚 마무리
+
+이 프로젝트는 단순한 예매 서비스 구현이 아닌,
+실제 서비스에서 발생할 수 있는 문제를 어떻게 설계로 해결할 것인가에 집중했습니다.
